@@ -1,0 +1,24 @@
+#!/usr/bin/env python2
+import sys
+import json
+import base64
+
+try:
+    dictionary = json.load(sys.stdin)
+except Exception:
+    exit()
+for filename in sys.argv[1:]:
+    components = filename.split('.')
+    extension = components[len(components) - 1]
+    try:
+        data = base64.b64decode(dictionary[extension])
+        f = open(filename, 'w')
+        f.write(data)
+        f.close()
+    except KeyError:
+        print('No', extension, 'available')
+    except OSError:
+        print('Could not write to', filename)
+    else:
+        print(extension, 'saved to', filename)
+

@@ -1,0 +1,18 @@
+#!/bin/bash
+# source the information file
+. ${MD_SCRIPT_ROOT}/mdExerciseBatchInfo
+#
+# run the loop
+for ((i=0;i<15;i++))
+do
+  # output to mp3
+  mscore -b 192 -o ${keysFileNames[$i]}${exerciseFileName}.mp3 ${keysFileNames[$i]}${exerciseFileName}_Audio.mscz
+  #
+  # input pngs and mp3, create the bnw and color (colorVariants) webm videos
+  #
+  for color in "${colorVariants[@]}"
+  do
+    duration=$(soxi -d ${keysFileNames[$i]}${exerciseFileName}.mp3);
+    ffmpeg -loop 1 -framerate 1 -i ${keysFileNames[$i]}${exerciseFileName}_${color}_1920x1080.png -i ${keysFileNames[$i]}${exerciseFileName}.mp3 -acodec copy -t ${duration} ${keysFileNames[$i]}${exerciseFileName}_${color}.mp4;
+  done;
+done;

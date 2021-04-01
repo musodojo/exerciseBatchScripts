@@ -1,0 +1,44 @@
+#!/bin/bash
+# source the information file
+. ${MD_SCRIPT_ROOT}/mdExerciseBatchInfo
+#
+# upload bnw and color (colorVariants) webm videos to youtube
+#
+if [ ${youtubeBatchNumber} -eq 1 ]
+then
+  low=0;
+  high=5;
+  echo "***** BATCH 1 ***** youtube-upload ${keysFileNames[$low]} to ${keysFileNames[(($high-1))]}";
+elif [ ${youtubeBatchNumber} -eq 2 ]
+then
+  low=5;
+  high=10;
+  echo "***** BATCH 2 ***** youtube-upload ${keysFileNames[$low]} to ${keysFileNames[(($high-1))]}";
+elif [ ${youtubeBatchNumber} -eq 3 ]
+then
+  low=10;
+  high=15;
+  echo "***** BATCH 3 ***** youtube-upload ${keysFileNames[$low]} to ${keysFileNames[(($high-1))]}";
+else
+  exit "cannot upload, reset youtubeBatchNumber, value=${youtubeBatchNumber}";
+fi
+#
+#
+echo "Exercise = ${exerciseYoutubeName}";
+echo;
+read -p "Are you sure? " -n 1 -r
+echo    # move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
+fi
+#
+for ((i=${low};i<${high};i++))
+do
+  for color in "${colorVariants[@]}"
+  do
+    youtube-upload --title="${keysYoutubeNames[$i]} ${exerciseYoutubeName} Backing Track ${color}" --description "Play or sing along. This track features double bass, cello, viola and violin playing ${keysYoutubeNames[$i]} ${exerciseYoutubeName}. Sheet music is provided on G treble clef, C alto clef and F bass clef." --category="Music" --playlist="Exercises in ${keysYoutubeNames[$i]} ${color}" --tags="music,scales,scale,arpeggios,arpeggio,clef,treble,alto,bass,tenor,soprano,score,exercises,exercise,practise,practice,instrument,instruments,stringed,double bass,cello,viola,violin,fiddle,bass,guitar,ukulele,harp,mandolin,lute,sitar,brass,tuba,horn,french horn,trombone,saxophone,trumpet,wind,woodwind,flute,whistle,clarinet,piccolo,oboe,bassoon,recorder,harmonica,voice,vocal,vocals,keyboard,piano,accordian,organ,xylophone" --license="creativeCommon" --privacy="public" ${keysFileNames[$i]}${exerciseFileName}_${color}.mp4
+  done;
+done;
+#
+sed -i "s,youtubeBatchNumber=${youtubeBatchNumber},youtubeBatchNumber=$((youtubeBatchNumber+1)),g" ${MD_SCRIPT_ROOT}/mdExerciseBatchInfo;

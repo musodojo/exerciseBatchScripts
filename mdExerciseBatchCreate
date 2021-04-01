@@ -1,0 +1,110 @@
+#!/bin/bash
+# source the information file
+. ${MD_SCRIPT_ROOT}/mdExerciseBatchInfo
+#
+echo "[y,n] Save ${exerciseYoutubeName} to";
+pwd;
+echo;
+read -p "Are you sure? " -n 1 -r
+echo    # move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
+fi
+#
+# a musescore traspose function with an input filename and an output filename as arguments
+mscoreTranspose () { # inputFile outputFile
+  mscore $1 --score-transpose '{"mode": "by_key", "direction": "up", "targetKey": '${keysMusescoreNumbers[$i]}', "transposeKeySignatures": true, "transposeChordNames": true, "useDoubleSharpsFlats": true}' | ${MD_SCRIPT_ROOT}/mdExerciseJson2Mscz $2;
+}
+
+# run the loop
+# mscz templates should be in E Flat [flavour - e.g. Major, Minor, Dorian, ...]
+# E Flat Locrian template would have 8 flats, so use D Sharp Locrian instead
+for ((i=0;i<15;i++))
+do
+  #
+  # mscz and musicxml files from visible bnw template
+  #
+  # transpose *visible* bnw template mscz up through the keys
+  mscoreTranspose ${MD_SCRIPT_ROOT}/mdExerciseTemplateVisible.mscz ${keysFileNames[$i]}${exerciseFileName}_Visible_NoTitle.mscz;
+  # if it is tranposed up to D Sharp, musescore does not transpose properly
+  # have to run the same tranpose twice to get "up" to D Sharp
+  # this does not apply to Locrian because the template is in D Sharp
+  # use the output of the previous transpose command
+  if [ ${keysFileNames[$i]} = "dSharp" ] && [ ${exercise} != "Locrian" ]
+  then
+    mscoreTranspose ${keysFileNames[$i]}${exerciseFileName}_Visible_NoTitle.mscz ${keysFileNames[$i]}${exerciseFileName}_Visible_NoTitle_2.mscz;
+    mv ${keysFileNames[$i]}${exerciseFileName}_Visible_NoTitle_2.mscz ${keysFileNames[$i]}${exerciseFileName}_Visible_NoTitle.mscz
+  fi
+  # add correct title to mscore plugin
+  sed -i.bak "s,REPLACE_ME_TITLE,${keysMusescoreNames[$i]} ${exerciseMuseScoreName},g" ${MSCORE_PLUGIN_ROOT}/mdAddNoteNamesTitle.qml;
+  # move the new template to the appropriate filename
+  mv ${MSCORE_PLUGIN_ROOT}/mdAddNoteNamesTitle.qml ${MSCORE_PLUGIN_ROOT}/${keysFileNames[$i]}${exerciseFileName}.qml;
+  # move the backup back to mdAddNoteNamesTitle.qml
+  mv ${MSCORE_PLUGIN_ROOT}/mdAddNoteNamesTitle.qml.bak ${MSCORE_PLUGIN_ROOT}/mdAddNoteNamesTitle.qml;
+  # apply the newly created plugin with correct title
+  mscore -p ${keysFileNames[$i]}${exerciseFileName}.qml -o ${keysFileNames[$i]}${exerciseFileName}_BnW.mscz ${keysFileNames[$i]}${exerciseFileName}_Visible_NoTitle.mscz;
+  # remove no-title mscore file
+  rm ${keysFileNames[$i]}${exerciseFileName}_Visible_NoTitle.mscz;
+  #
+  #
+  # visible bnw mscz output to musicxml
+  mscore -o ${keysFileNames[$i]}${exerciseFileName}_BnW.musicxml ${keysFileNames[$i]}${exerciseFileName}_BnW.mscz
+  # add color and output to mscz
+  mscore -p mdColorNotes.qml -o ${keysFileNames[$i]}${exerciseFileName}_Color.mscz ${keysFileNames[$i]}${exerciseFileName}_BnW.mscz
+  # visible colored mscz output to musicxml
+  mscore -o ${keysFileNames[$i]}${exerciseFileName}_Color.musicxml ${keysFileNames[$i]}${exerciseFileName}_Color.mscz
+  #
+  # bnw, color and white png files from invisible bnw template
+  #
+  # transpose *invisible* bnw template mscz
+ mscoreTranspose ${MD_SCRIPT_ROOT}/mdExerciseTemplateInvisible.mscz ${keysFileNames[$i]}${exerciseFileName}_Invisible_NoTitle.mscz;
+ # if it is tranposed up to D Sharp, musescore does not transpose properly
+ # have to run the same tranpose twice to get "up" to D Sharp
+ # this does not apply to Locrian because the template is in D Sharp
+ # use the output of the previous transpose command
+ if [ ${keysFileNames[$i]} = "dSharp" ] && [ ${exercise} != "Locrian" ]
+  then
+    mscoreTranspose ${keysFileNames[$i]}${exerciseFileName}_Invisible_NoTitle.mscz ${keysFileNames[$i]}${exerciseFileName}_Invisible_NoTitle_2.mscz;
+    mv ${keysFileNames[$i]}${exerciseFileName}_Invisible_NoTitle_2.mscz ${keysFileNames[$i]}${exerciseFileName}_Invisible_NoTitle.mscz
+  fi
+  # apply the (above) newly created plugin with correct title
+  mscore -p ${keysFileNames[$i]}${exerciseFileName}.qml -o ${keysFileNames[$i]}${exerciseFileName}_BnW_Invisible.mscz ${keysFileNames[$i]}${exerciseFileName}_Invisible_NoTitle.mscz;
+  rm ${keysFileNames[$i]}${exerciseFileName}_Invisible_NoTitle.mscz;
+  #
+  #
+  # invisible bnw_2 mscz output to bnw png
+  mscore -o ${keysFileNames[$i]}${exerciseFileName}_BnW.png ${keysFileNames[$i]}${exerciseFileName}_BnW_Invisible.mscz
+  ffmpeg -i ${keysFileNames[$i]}${exerciseFileName}_BnW-1.png -vf "scale=1920:-1,crop=1920:1080:0:0" ${keysFileNames[$i]}${exerciseFileName}_BnW_1920x1080.png;
+  rm ${keysFileNames[$i]}${exerciseFileName}_BnW-1.png
+  # add color and output to color png
+  mscore -p mdColorNotes.qml -o ${keysFileNames[$i]}${exerciseFileName}_Color.png ${keysFileNames[$i]}${exerciseFileName}_BnW_Invisible.mscz
+  ffmpeg -i ${keysFileNames[$i]}${exerciseFileName}_Color-1.png -vf "scale=1920:-1,crop=1920:1080:0:0" ${keysFileNames[$i]}${exerciseFileName}_Color_1920x1080.png;
+  rm ${keysFileNames[$i]}${exerciseFileName}_Color-1.png
+  # add white notes and output to white png
+  mscore -p mdWhiteNotes.qml -o ${keysFileNames[$i]}${exerciseFileName}_White.png ${keysFileNames[$i]}${exerciseFileName}_BnW_Invisible.mscz
+  ffmpeg -i ${keysFileNames[$i]}${exerciseFileName}_White-1.png -vf "scale=1920:-1,crop=1920:1080:0:0" ${keysFileNames[$i]}${exerciseFileName}_White_1920x1080.png;
+  rm ${keysFileNames[$i]}${exerciseFileName}_White-1.png
+  # rm un-needed bnw_2 mscz
+  rm ${keysFileNames[$i]}${exerciseFileName}_BnW_Invisible.mscz
+  #
+  # scores for the mp3 files from audio template input mscz
+  #
+  # transpose *Audio* template to no-title file
+  mscoreTranspose ${MD_SCRIPT_ROOT}/mdExerciseTemplateAudio.mscz ${keysFileNames[$i]}${exerciseFileName}_Audio_NoTitle.mscz;
+  # if it is tranposed up to D Sharp, musescore does not transpose properly
+  # have to run the same tranpose twice to get "up" to D Sharp
+  # this does not apply to Locrian because the template is in D Sharp
+  # use the output of the previous transpose command
+  if [ ${keysFileNames[$i]} = "dSharp" ] && [ ${exercise} != "Locrian" ]
+  then
+    mscoreTranspose ${keysFileNames[$i]}${exerciseFileName}_Audio_NoTitle.mscz ${keysFileNames[$i]}${exerciseFileName}_Audio_NoTitle_2.mscz;
+    mv ${keysFileNames[$i]}${exerciseFileName}_Audio_NoTitle_2.mscz ${keysFileNames[$i]}${exerciseFileName}_Audio_NoTitle.mscz
+  fi
+  # add title and note names output to final file name
+  mscore -p ${keysFileNames[$i]}${exerciseFileName}.qml -o ${keysFileNames[$i]}${exerciseFileName}_Audio.mscz  ${keysFileNames[$i]}${exerciseFileName}_Audio_NoTitle.mscz;
+  # remove no-title mscore file
+  rm ${keysFileNames[$i]}${exerciseFileName}_Audio_NoTitle.mscz;
+  # remove custom-title plugin file
+  rm ${MSCORE_PLUGIN_ROOT}/${keysFileNames[$i]}${exerciseFileName}.qml;
+done;

@@ -1,0 +1,116 @@
+#!/bin/bash
+#
+# set MD_SCRIPT_ROOT (e.g. in ~/.bash_profile)
+# export MD_SCRIPT_ROOT=~/musodojo/documents/mdExerciseBatchScript
+# set MSCORE_PLUGIN_ROOT (e.g. in ~/.bash_profile)
+# export MSCORE_PLUGIN_ROOT=~/MuseScore3/Plugins
+#
+#
+# ****************************
+# If there is anything arguments in the command line
+# this function is called
+# outputs info to check over to terminal
+# ****************************
+#
+sanityCheck () {
+  echo "";
+  echo "     File Name   ${exerciseFileName}";
+  echo "Musescore Name   ${exerciseMuseScoreName}";
+  echo "  YouTube Name   ${exerciseYoutubeName}";
+  echo "";
+  echo "${#keysFileNames[@]}, ${#keysMusescoreNames[@]}, ${#keysYoutubeNames[@]}, ${#keysMusescoreNumbers[@]}";
+  echo "";
+  for ((i=0; i<${#keysFileNames[@]}; i++))
+  do
+    echo "${keysFileNames[$i]}, ${keysMusescoreNames[$i]}, ${keysYoutubeNames[$i]}, ${keysMusescoreNumbers[$i]}";
+  done;
+}
+#
+# ****************************
+# ********** TITLES **********
+# ****************************
+#
+exercise="Minor";
+exerciseFileName="MinorPentatonicScaleOneOctave";
+exerciseMuseScoreName="Minor Pentatonic Scale One Octave";
+exerciseYoutubeName="Minor Pentatonic Scale One Octave at 100bpm";
+# 
+# naming convention examples below
+#
+#exerciseFileName="MelodicMinorScaleOneOcatve";
+#exerciseMuseScoreName="Melodic Minor Scale One Octave";
+#exerciseYoutubeName="Melodic Minor Scale One Octave at 100bpm";
+#
+#exerciseFileName="MinorScaleTo5th";
+#exerciseMuseScoreName="Minor Scale to 5th";
+#exerciseYoutubeName="Minor Scale to 5th at 60bpm";
+#
+# ****************************
+# *********** KEYS ***********
+# ****************************
+#
+# -7 = C flat major / A flat minor
+# -6 = G flat major / E flat minor
+# -5 = D flat major / B flat minor
+# -4 = A flat major / F minor
+# -3 = E flat major / C minor
+# -2 = B flat major / G minor
+# -1 = F major / D minor
+# 0 = C major / A minor
+# 1 = G major / E minor
+# 2 = D major / B minor
+# 3 = A major / F sharp minor
+# 4 = E major / C sharp minor
+# 5 = B major / G sharp minor
+# 6 = F sharp major / D sharp minor
+# 7 = C sharp major / A sharp minor
+#
+# many keys
+#
+keysFileNamesUniversal=("fFlat" "cFlat" "gFlat" "dFlat" "aFlat" "eFlat" "bFlat" "f" "c" "g" "d" "a" "e" "b" "fSharp" "cSharp" "gSharp" "dSharp" "aSharp" "eSharp" "bSharp");
+keysMusescoreNamesUniversal=("F♭" "C♭" "G♭" "D♭" "A♭" "E♭" "B♭" "F" "C" "G" "D" "A" "E" "B" "F♯" "C♯" "G♯" "D♯" "A♯" "E♯" "B♯");
+keysYoutubeNamesUniversal=("F♭ F Flat" "C♭ C Flat" "G♭ G Flat" "D♭ D Flat" "A♭ A Flat" "E♭ E Flat" "B♭ B Flat" "F" "C" "G" "D" "A" "E" "B" "F♯ F Sharp" "C♯ C Sharp" "G♯ G Sharp" "D♯ D Sharp" "A♯ A Sharp" "E♯ E Sharp" "B♯ B Sharp");
+case ${exercise} in
+  "Major")
+  universalIndex="1";
+  ;;
+  "Dorian")
+  universalIndex="3";
+  ;;
+  "Phrygian")
+  universalIndex="5";
+  ;;
+  "Lydian")
+  universalIndex="0";
+  ;;
+  "Mixolydian")
+  universalIndex="2";
+  ;;
+  "Minor")
+  universalIndex="4";
+  ;;
+  "Locrian")
+  universalIndex="6";
+  ;;
+  *)
+  echo "exercise name is not from standard list";
+  exit 1;
+  ;;
+esac
+keysFileNames=("${keysFileNamesUniversal[@]:${universalIndex}:15}");
+keysMusescoreNames=("${keysMusescoreNamesUniversal[@]:${universalIndex}:15}");
+keysYoutubeNames=("${keysYoutubeNamesUniversal[@]:${universalIndex}:15}");
+#
+# more variables
+#
+keysMusescoreNumbers=("-7" "-6" "-5" "-4" "-3" "-2" "-1" "0" "1" "2" "3" "4" "5" "6" "7");
+colorVariants=("BnW" "Color");
+youtubeBatchNumber=4;
+#
+# if command line argument mdExerciseBatchScript
+# run the sanity check function above
+#
+if [ $# -gt 0 ]
+then
+  sanityCheck;
+fi

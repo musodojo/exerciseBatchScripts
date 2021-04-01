@@ -1,0 +1,21 @@
+#!/bin/bash
+# source the information file
+. ${MD_SCRIPT_ROOT}/mdExerciseBatchInfo
+#
+read -p "***** DELETE ALL MP3s & MP4s ***** Are you sure? " -n 1 -r
+echo    # move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
+fi
+#
+for ((i=0;i<15;i++))
+do
+  echo "rm ${keysFileNames[$i]}${exerciseFileName}.mp3";
+  rm ${keysFileNames[$i]}${exerciseFileName}.mp3
+  for color in "${colorVariants[@]}"
+  do
+    echo "rm ${keysFileNames[$i]}${exerciseFileName}_${color}.mp4";
+    rm ${keysFileNames[$i]}${exerciseFileName}_${color}.mp4
+  done;
+done;
